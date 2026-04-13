@@ -2,7 +2,7 @@
 
 An ESP32-C6 firmware that reads NFC filament spool tags and displays spool data from a [Spoolman](https://github.com/Donkie/Spoolman) server via a self-hosted web interface. Optionally integrates with [Moonraker](https://github.com/Arksine/moonraker) to track the currently loaded spool.
 
-<img src="./img/dashboard.png" alt="dashboard" width="100%"/>
+<img src="./img/dashboard.png" alt="dashboard" width="80%"/>
 
 ## Features
 
