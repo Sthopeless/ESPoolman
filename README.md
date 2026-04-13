@@ -4,6 +4,9 @@ An ESP32-C6 firmware that reads NFC filament spool tags and displays spool data 
 
 <img src="./img/dashboard.png" alt="dashboard" width="80%"/>
 
+<img src="./img/spool_inventory.png" alt="spool_inventory" width="80%"/>
+
+
 ## Features
 
 - Reads NFC tags (MIFARE Classic / NTAG) from filament spools
