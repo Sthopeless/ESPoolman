@@ -6,6 +6,7 @@ An ESP32-C6 firmware that reads NFC filament spool tags and displays spool data 
 
 <img src="./img/spool_inventory.png" alt="spool_inventory" width="80%"/>
 
+<img src="./img/spoolman.png" alt="spoolman" width="80%"/>
 
 ## Features
 
