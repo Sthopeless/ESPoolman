@@ -179,10 +179,10 @@ const char *getIndexHtml() {
     }
 
     .gauge-fill {
+      display: block;
       height: 100%;
       border-radius: 999px;
       transition: width 0.3s ease;
-      background: linear-gradient(90deg, rgba(255,138,61,0.95), rgba(255,138,61,0.7));
     }
 
     .color-chip {
@@ -428,8 +428,37 @@ const char *getIndexHtml() {
     }
 
     .spool-color-bar {
-      height: 4px;
+      height: 10px;
       width: 100%;
+    }
+
+    .spool-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .spool-stat {
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      padding: 6px 9px;
+      text-align: center;
+    }
+
+    .spool-stat span {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .spool-stat strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text);
     }
 
     .spool-card .card-body {
@@ -744,7 +773,8 @@ const char *getIndexHtml() {
       armedSpoolId: null,
       armedSpoolName: null,
       currentPanel: 'dashboard',
-      viewMode: 'grid'
+      viewMode: 'grid',
+      settings: {}
     };
 
     const dirtyFields = new Set();
@@ -958,32 +988,49 @@ const char *getIndexHtml() {
       items.forEach(spool => {
         const remaining = parseFloat(spool.remaining) || 0;
         const total = parseFloat(spool.totalWeight) || 0;
-        const percent = total ? Math.max(0, Math.min(100, Math.round((remaining / total) * 100))) : 0;
+        const usedWeight = parseFloat(spool.usedWeight) || (total - remaining);
+        const usedPercent = total ? Math.max(0, Math.min(100, Math.round((usedWeight / total) * 100))) : 0;
+        const percent = 100 - usedPercent;
         const color = normalizeHex(spool.color || 'FFFFFF');
         const isArmed = uiState.armedSpoolId === spool.id;
         const safeName = (spool.name||'Spool #'+spool.id).replace(/'/g,"\\'");
         const card = document.createElement('article');
         card.className = 'spool-card' + (isArmed ? ' pulse' : '');
         card.style.borderColor = isArmed ? 'rgba(58,204,122,0.5)' : 'rgba(255,255,255,0.07)';
+        const snf = uiState.settings || {};
+        const stats = [];
+        if (snf.snfExtTemp  && spool.extruderTemp)  stats.push(['Extruder', spool.extruderTemp + ' °C']);
+        if (snf.snfBedTemp  && spool.bedTemp)        stats.push(['Bed', spool.bedTemp + ' °C']);
+        if (snf.snfDiameter && spool.diameter)       stats.push(['Diameter', spool.diameter.toFixed(2) + ' mm']);
+        if (snf.snfWeight   && spool.totalWeight)    stats.push(['Net Weight', spool.totalWeight.toFixed(0) + ' g']);
+        if (snf.snfSpoolWt  && spool.spoolWeight)    stats.push(['Spool Wt', spool.spoolWeight.toFixed(0) + ' g']);
+        if (snf.snfDensity  && spool.density)        stats.push(['Density', spool.density.toFixed(2) + ' g/cm³']);
+        if (snf.snfFlow     && spool.flowRatio)      stats.push(['Flow', spool.flowRatio]);
+        if (snf.snfMaxSpeed && spool.maxVolumetric)  stats.push(['Max Vol', spool.maxVolumetric + ' mm³/s']);
+        const statsHtml = stats.length ? `<div class="spool-stats">${stats.map(([l,v]) =>
+          `<div class="spool-stat"><span>${l}</span><strong>${v}</strong></div>`).join('')}</div>` : '';
+
         card.innerHTML = `
-          <div class="spool-color-bar" style="background:#${color};opacity:${color === 'FFFFFF' ? 0.15 : 0.7}"></div>
+          <div class="spool-color-bar" style="background:#${color};opacity:${color === 'FFFFFF' ? 0.15 : 1}"></div>
           <div class="card-body" style="padding:16px">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px">
               <div style="min-width:0">
                 <h3 style="font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:4px">
                   <span class="color-chip" style="background:#${color};width:12px;height:12px;flex-shrink:0"></span>
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${spool.name || 'Unnamed'}</span>
                 </h3>
-                <small style="color:var(--muted)">${spool.material || '-'} · ${spool.brand || '-'}</small>
+                <small style="color:var(--muted)">${[spool.material, spool.brand].filter(Boolean).join(' · ') || '-'}</small>
               </div>
-              <span class="spool-badge" style="padding:5px 10px;font-size:12px">#${spool.id}</span>
+              <span class="spool-badge" style="padding:5px 10px;font-size:12px;flex-shrink:0">#${spool.id}</span>
             </div>
-            <div class="gauge" style="margin-bottom:8px"><span class="gauge-fill" style="width:${percent}%;background:#${color}"></span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            ${snf.snfRemaining !== false ? `
+            <div class="gauge" style="margin-bottom:6px"><span class="gauge-fill" style="width:${percent}%;background:${gaugeColor(color)}"></span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
               <span style="font-size:13px;color:var(--muted)">${remaining.toFixed(0)} g remaining</span>
-              <span style="font-size:13px;font-weight:700;color:var(--text)">${percent}%</span>
-            </div>
-            ${spool.location ? `<div style="font-size:12px;color:var(--muted);margin-bottom:14px">📍 ${spool.location}</div>` : ''}
+              <span style="font-size:13px;font-weight:700;color:var(--text)">${percent}% left</span>
+            </div>` : ''}
+            ${statsHtml}
+            ${snf.snfLocation !== false && spool.location ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">📍 ${spool.location}</div>` : ''}
             <button class="${isArmed ? 'button' : 'button secondary'}" style="width:100%;justify-content:center"
               onclick="writeSpoolDirect(${spool.id},${spool.filamentId||0},'${safeName}')">
               ${isArmed ? '⚡ Armed — tap a tag' : '✎ Write to Tag'}
@@ -999,6 +1046,20 @@ const char *getIndexHtml() {
         hex = hex.split('').map(ch => ch + ch).join('');
       }
       return /^[0-9A-F]{6}$/.test(hex) ? hex : 'FFFFFF';
+    }
+
+    // Returns a CSS color safe to use as a gauge fill — brightens very dark colors
+    // so they remain visible on a dark panel background.
+    function gaugeColor(hex) {
+      const r = parseInt(hex.slice(0,2), 16);
+      const g = parseInt(hex.slice(2,4), 16);
+      const b = parseInt(hex.slice(4,6), 16);
+      const lum = 0.299*r + 0.587*g + 0.114*b;
+      if (lum < 40) {
+        const boost = Math.round((40 - lum) * 2.5);
+        return `rgb(${Math.min(255,r+boost)},${Math.min(255,g+boost)},${Math.min(255,b+boost)})`;
+      }
+      return `#${hex}`;
     }
 
     function writeSpoolDirect(id, filamentId, name) {
@@ -1211,6 +1272,10 @@ const char *getIndexHtml() {
           const checkbox = document.getElementById(item.key);
           if (checkbox) checkbox.checked = data[item.key] !== false;
         });
+
+        // Cache snf* flags so renderSpools can respect them
+        uiState.settings = {};
+        fieldConfig.forEach(item => { uiState.settings[item.key] = data[item.key] !== false; });
 
         updateConsole(data.logger);
 
