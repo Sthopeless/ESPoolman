@@ -142,7 +142,7 @@ bool DeviceSettings::fromJson(const JsonDocument &doc) {
 }
 
 String DeviceSettings::serialize() const {
-  StaticJsonDocument<2560> doc;
+  JsonDocument doc;
   toJson(doc);
   String json;
   serializeJson(doc, json);
@@ -150,7 +150,7 @@ String DeviceSettings::serialize() const {
 }
 
 bool DeviceSettings::deserialize(const String &json) {
-  StaticJsonDocument<2560> doc;
+  JsonDocument doc;
   const DeserializationError error = deserializeJson(doc, json);
   if (error) {
     return false;

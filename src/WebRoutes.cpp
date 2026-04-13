@@ -152,7 +152,7 @@ static void saveConfig(AsyncWebServerRequest *request, const String &body) {
   // Preserve existing password if none supplied in request
   const String existingPass = settings.authPass;
   settings.fromJson(doc);
-  const String newPass = doc.containsKey("authPass") ? String((const char *)doc["authPass"]) : "";
+  const String newPass = doc["authPass"].is<const char*>() ? String((const char *)doc["authPass"]) : "";
   if (newPass.isEmpty()) {
     settings.authPass = existingPass;
   }
@@ -169,7 +169,7 @@ void setupWebRoutes() {
   });
 
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
-    StaticJsonDocument<4096> doc;
+    JsonDocument doc;
     populateDataResponse(doc);
     sendJson(request, doc);
   });

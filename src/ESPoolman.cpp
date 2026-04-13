@@ -122,7 +122,7 @@ void buildSpoolsCache() {
     return;
   }
 
-  DynamicJsonDocument sourceDoc(8192);
+  JsonDocument sourceDoc;
   String errorMessage;
   if (!fetchSpoolmanSpools(sourceDoc, errorMessage)) {
     errorServer(errorMessage);
@@ -135,7 +135,7 @@ void buildSpoolsCache() {
   ledSpoolman = true;
   filamentName = "";
 
-  DynamicJsonDocument responseDoc(8192);
+  JsonDocument responseDoc;
   JsonArray responseArray = responseDoc.to<JsonArray>();
 
   for (JsonObject spool : sourceDoc.as<JsonArray>()) {
