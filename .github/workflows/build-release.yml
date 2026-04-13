@@ -41,6 +41,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade platformio
 
+      - name: Install pioarduino platform
+        run: pio pkg install -g -p "https://github.com/pioarduino/platform-espressif32/releases/download/54.03.21/platform-espressif32.zip"
+
       - name: Run PlatformIO Build
         run: pio run -e esp32-c6-super-mini
 
