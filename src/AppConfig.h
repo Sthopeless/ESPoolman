@@ -82,6 +82,23 @@ inline constexpr const char *KEY_SHOW_TAB_SPOOLS = "show_tab_spools";
 inline constexpr const char *BASIC_AUTH_USER = "espoolman";
 inline constexpr const char *BASIC_AUTH_PASS = "espoolman";
 
+// HX711 scale defaults
+inline constexpr int DEFAULT_HX711_DOUT_PIN = 3;
+inline constexpr int DEFAULT_HX711_SCK_PIN = 10;
+inline constexpr float DEFAULT_HX711_CALIBRATION = 420.0f;
+
+// SSD1306 OLED defaults (I2C)
+inline constexpr int DEFAULT_OLED_SDA_PIN = 18;
+inline constexpr int DEFAULT_OLED_SCL_PIN = 19;
+inline constexpr uint8_t DEFAULT_OLED_ADDR = 0x3C;
+
+// Scale buttons
+inline constexpr int DEFAULT_BTN_TARE_PIN = 0;
+inline constexpr int DEFAULT_BTN_ENTER_PIN = 1;
+
+// MQTT defaults
+inline constexpr int DEFAULT_MQTT_PORT = 1883;
+
 // NFC dashboard field show/hide (all under 15 chars)
 inline constexpr const char *KEY_SHOW_NFC_FIELD_NAME     = "snf_name";   // 8
 inline constexpr const char *KEY_SHOW_NFC_FIELD_MATERIAL = "snf_mat";    // 7

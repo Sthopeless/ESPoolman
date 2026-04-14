@@ -52,6 +52,7 @@ case "$MODE" in
     banner "Uploading via USB..."
     pio run --target upload -e "$ENV_USB"
     ok "Done — fresh flash complete (NVS erased, .pio cleared, device will start in AP mode)."
+    pio device monitor -e "$ENV_USB"
     ;;
 
   monitor)

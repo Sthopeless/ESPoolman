@@ -200,3 +200,31 @@ void setSpool(int setId, bool validate) {
     setLedColor(LED_HUE_RED);
   }
 }
+
+bool measureSpoolWeight(int spoolId, float grossWeightGrams, String &errorMessage) {
+  if (WiFi.status() != WL_CONNECTED) {
+    errorMessage = "WiFi not connected";
+    return false;
+  }
+
+  HTTPClient http;
+  String url = "http://" + settings.serverSpoolman + "/api/v1/spool/" + String(spoolId) + "/measure";
+  http.begin(url);
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+  http.setTimeout(4000);
+  http.addHeader("Content-Type", "application/json");
+
+  JsonDocument doc;
+  doc["weight"] = grossWeightGrams;
+  String body;
+  serializeJson(doc, body);
+
+  const int code = http.PUT(body);
+  http.end();
+
+  if (code < 200 || code >= 300) {
+    errorMessage = "HTTP " + String(code);
+    return false;
+  }
+  return true;
+}

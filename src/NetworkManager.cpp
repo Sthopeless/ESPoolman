@@ -3,6 +3,7 @@
 #include "SettingsManager.h"
 #include "WebRoutes.h"
 #include "SpoolmanClient.h"
+#include "MqttManager.h"
 #include <WiFi.h>
 
 static TaskHandle_t networkTaskHandle = nullptr;
@@ -111,6 +112,8 @@ static void networkWorker(void *param) {
       }
     }
 
+    loopMqtt();
+
     vTaskDelay(pdMS_TO_TICKS(500));
   }
 }
@@ -132,7 +135,7 @@ void initNetwork() {
   logMessage("[INFO] Web server started");
 
   if (networkTaskHandle == nullptr) {
-    xTaskCreatePinnedToCore(networkWorker, "NetworkWorker", 4096, nullptr, 1, &networkTaskHandle, 0);
+    xTaskCreatePinnedToCore(networkWorker, "NetworkWorker", 8192, nullptr, 1, &networkTaskHandle, 0);
   }
 }
 

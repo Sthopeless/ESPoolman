@@ -7,3 +7,4 @@ bool getIdSpool(int id);
 bool fetchSpoolmanSpools(JsonDocument &doc, String &errorMessage);
 bool fetchSpoolById(int id, JsonDocument &doc, String &errorMessage);
 void setSpool(int setId, bool validate = true);
+bool measureSpoolWeight(int spoolId, float grossWeightGrams, String &errorMessage);

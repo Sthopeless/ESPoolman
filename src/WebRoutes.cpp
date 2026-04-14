@@ -6,6 +6,8 @@
 #include "OtaManager.h"
 #include "SpoolmanClient.h"
 #include "NetworkManager.h"
+#include "ScaleManager.h"
+#include "MqttManager.h"
 #include <WiFi.h>
 #include <ArduinoJson.h>
 
@@ -138,7 +140,25 @@ static void populateDataResponse(JsonDocument &doc) {
   doc["showFieldMoonraker"] = settings.showFieldMoonraker;
   doc["authEnabled"] = settings.authEnabled;
   doc["authUser"] = settings.authUser;
-  // authPass is intentionally not exposed
+
+  doc["scaleEnabled"] = settings.scaleEnabled;
+  doc["scaleDoutPin"] = settings.scaleDoutPin;
+  doc["scaleSckPin"] = settings.scaleSckPin;
+  doc["scaleCalibration"] = settings.scaleCalibration;
+  doc["oledEnabled"] = settings.oledEnabled;
+  doc["oledSdaPin"] = settings.oledSdaPin;
+  doc["oledSclPin"] = settings.oledSclPin;
+  doc["btnTarePin"] = settings.btnTarePin;
+  doc["btnEnterPin"] = settings.btnEnterPin;
+  doc["scaleWeight"] = lastScaleWeight;
+  doc["scaleConnected"] = scaleConnected;
+
+  doc["mqttEnabled"] = settings.mqttEnabled;
+  doc["mqttHost"] = settings.mqttHost;
+  doc["mqttPort"] = settings.mqttPort;
+  doc["mqttUser"] = settings.mqttUser;
+  doc["mqttTopic"] = settings.mqttTopic;
+  doc["mqttConnected"] = mqttConnected;
 }
 
 static void saveConfig(AsyncWebServerRequest *request, const String &body) {
@@ -149,12 +169,17 @@ static void saveConfig(AsyncWebServerRequest *request, const String &body) {
     return;
   }
 
-  // Preserve existing password if none supplied in request
-  const String existingPass = settings.authPass;
+  // Preserve existing passwords if none supplied in request
+  const String existingAuthPass = settings.authPass;
+  const String existingMqttPass = settings.mqttPass;
   settings.fromJson(doc);
-  const String newPass = doc["authPass"].is<const char*>() ? String((const char *)doc["authPass"]) : "";
-  if (newPass.isEmpty()) {
-    settings.authPass = existingPass;
+  const String newAuthPass = doc["authPass"].is<const char*>() ? String((const char *)doc["authPass"]) : "";
+  if (newAuthPass.isEmpty()) {
+    settings.authPass = existingAuthPass;
+  }
+  const String newMqttPass = doc["mqttPass"].is<const char*>() ? String((const char *)doc["mqttPass"]) : "";
+  if (newMqttPass.isEmpty()) {
+    settings.mqttPass = existingMqttPass;
   }
   settings.firstTimeSetup = false;
   saveSettings();
@@ -165,7 +190,9 @@ static void saveConfig(AsyncWebServerRequest *request, const String &body) {
 
 void setupWebRoutes() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", getIndexHtml());
+    const char *html = getIndexHtml();
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", reinterpret_cast<const uint8_t *>(html), strlen(html));
+    request->send(response);
   });
 
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -235,6 +262,100 @@ void setupWebRoutes() {
     notifyUiRefresh("write-cancelled");
     request->send(200, "text/plain", "Write cancelled");
   });
+
+  server.on("/scale/tare", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!authenticateRequest(request)) return;
+    if (!settings.scaleEnabled || !scaleConnected) {
+      request->send(400, "text/plain", "Scale not available");
+      return;
+    }
+    scaleTare();
+    notifyUiRefresh("scale-tared");
+    request->send(200, "text/plain", "Scale tared");
+  });
+
+  server.on("/scale/measure", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!authenticateRequest(request)) return;
+    if (!settings.scaleEnabled || !scaleConnected) {
+      request->send(400, "text/plain", "Scale not available");
+      return;
+    }
+    if (currentId <= 0) {
+      request->send(400, "text/plain", "No spool selected");
+      return;
+    }
+    float weight = scaleGetWeight();
+    if (weight < 0.5f) {
+      request->send(400, "text/plain", "No weight on scale");
+      return;
+    }
+    String error;
+    if (measureSpoolWeight(currentId, weight, error)) {
+      buildSpoolsCache();
+      notifyUiRefresh("weight-updated");
+      mqttPublishWeight(weight);
+      request->send(200, "text/plain", "Weight " + String(weight, 1) + "g sent to spool #" + String(currentId));
+    } else {
+      request->send(500, "text/plain", "Failed: " + error);
+    }
+  });
+
+  server.on("/scale/measure-spool", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!authenticateRequest(request)) return;
+    if (!settings.scaleEnabled || !scaleConnected) {
+      request->send(400, "text/plain", "Scale not available");
+      return;
+    }
+    const String body = consumeRequestBody(request);
+    JsonDocument doc;
+    if (deserializeJson(doc, body)) {
+      request->send(400, "text/plain", "Invalid JSON");
+      return;
+    }
+    int spoolId = doc["spoolId"] | 0;
+    if (spoolId <= 0) {
+      request->send(400, "text/plain", "Select a spool first");
+      return;
+    }
+    float weight = scaleGetWeight();
+    if (weight < 0.5f) {
+      request->send(400, "text/plain", "No weight on scale");
+      return;
+    }
+    String error;
+    if (measureSpoolWeight(spoolId, weight, error)) {
+      buildSpoolsCache();
+      notifyUiRefresh("weight-updated");
+      mqttPublishWeight(weight);
+      request->send(200, "text/plain", "Weight " + String(weight, 1) + "g sent to spool #" + String(spoolId));
+    } else {
+      request->send(500, "text/plain", "Failed: " + error);
+    }
+  }, nullptr, readRequestBody);
+
+  server.on("/scale/calibrate", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!authenticateRequest(request)) return;
+    const String body = consumeRequestBody(request);
+    JsonDocument doc;
+    if (deserializeJson(doc, body)) {
+      request->send(400, "text/plain", "Invalid JSON");
+      return;
+    }
+    float knownWeight = doc["knownWeight"] | 0.0f;
+    if (knownWeight < 1.0f) {
+      request->send(400, "text/plain", "Provide knownWeight >= 1g");
+      return;
+    }
+    float rawReading = scaleGetWeight();
+    if (rawReading < 0.5f) {
+      request->send(400, "text/plain", "Place the known weight on the scale first");
+      return;
+    }
+    float newCal = settings.scaleCalibration * (rawReading / knownWeight);
+    settings.scaleCalibration = newCal;
+    saveSettings();
+    request->send(200, "text/plain", "Calibration updated to " + String(newCal, 2));
+  }, nullptr, readRequestBody);
 
   setupOtaRoutes();
 }

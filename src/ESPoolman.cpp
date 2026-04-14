@@ -24,6 +24,8 @@
 #include "NetworkManager.h"
 #include "StatusLed.h"
 #include "SettingsManager.h"
+#include "ScaleManager.h"
+#include "MqttManager.h"
 
 CRGB leds[NUMLEDS];
 
@@ -100,8 +102,12 @@ void scheduleRestart(const String &reason, unsigned long delayMs) {
   logMessage("[INFO] Restart scheduled: " + reason);
 }
 
+static portMUX_TYPE eventsMux = portMUX_INITIALIZER_UNLOCKED;
+
 void notifyUiRefresh(const char *eventName) {
+  portENTER_CRITICAL(&eventsMux);
   events.send(eventName, "refresh", millis());
+  portEXIT_CRITICAL(&eventsMux);
 }
 
 void cancelPendingNfcWrite(const String &reason) {
@@ -229,6 +235,9 @@ void setup() {
   } else {
     logMessage("[ERROR] Reader not found RC522");
   }
+
+  initScale();
+  initMqtt();
 }
 
 void loop() {
@@ -283,6 +292,8 @@ void loop() {
   readNFC();
 
   updateStatusLed(true, WiFi.status() == WL_CONNECTED, ledMoonraker && ledSpoolman && ledNfc, wifiSettingMode);
+
+  loopScale();
 
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');

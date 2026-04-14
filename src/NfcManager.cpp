@@ -255,7 +255,6 @@ bool readUltralightTag(String &rawData) {
     const MFRC522::StatusCode status = mfrc522.MIFARE_Read(page, buffer, &byteCount);
     if (status != MFRC522::StatusCode::STATUS_OK) {
       // Tag NAKed — this is normal at the end of MIFARE Ultralight (page 16+).
-      // If we already collected data, treat this as end-of-memory, not an error.
       logMessage("[INFO] UL page " + String(page) + " read status=" + String((int)status)
                  + " rawData=" + String(rawData.length()) + "B — stopping");
       break;
@@ -531,11 +530,9 @@ void readNFC() {
   logMessage("[INFO] Parsed: SPOOL=" + String(spoolId) + " FILAMENT=" + String(filamentId));
 
   // Store only clean ASCII text — rawData contains binary NDEF header bytes that
-  // corrupt the /data JSON response and silently break the entire WebUI.
   prefs.putString(KEY_NFC_JSON, "SPOOL:" + String(spoolId) + "\nFILAMENT:" + String(filamentId));
   prefs.putInt(KEY_NFC_ID, spoolId);
   prefs.putInt(KEY_NFC_FILAMENT_ID, filamentId);
-  // Clear stale Spoolman fields now so the UI shows a clean slate immediately
   prefs.putString(KEY_NFC_NAME,       "");
   prefs.putString(KEY_NFC_BRAND,      "");
   prefs.putString(KEY_NFC_COLOR,      "");
@@ -551,11 +548,9 @@ void readNFC() {
   prefs.putString(KEY_NFC_MAX_SPEED,  "");
   prefs.putString(KEY_NFC_SPOOL_WT,   "");
 
-  // Halt tag before making HTTP calls — tag is no longer needed
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 
-  // Notify UI immediately — spool ID / filament ID appear at once, before the Spoolman HTTP call
   setLedColor(LED_HUE_YELLOW);
   notifyUiRefresh("nfc-read");
 
@@ -581,7 +576,6 @@ void readNFC() {
     const double density      = (double)(filament["density"] | 0.0);
     const String flowRatio    = String(extra["flow_ratio"] | "");
     const String maxSpeed     = String(extra["max_volumetric_speed"] | "");
-    // spool_weight may appear at spool level or filament level
     double spoolWt = (double)(spoolDoc["spool_weight"] | 0.0);
     if (spoolWt == 0.0) spoolWt = (double)(filament["spool_weight"] | 0.0);
 
@@ -621,10 +615,8 @@ void readNFC() {
     logMessage("Read tag [" + lastDetectedTagType + "] SPOOL:" + String(spoolId) + " (no Spoolman data)");
   }
 
-  // Second push — updates Spoolman-derived fields (or shows them as empty if fetch failed)
   notifyUiRefresh("nfc-spoolman");
 
-  // validate=false: we already fetched this spool successfully above, skip the redundant fetchSpoolmanSpools() call
   setSpool(spoolId, false);
   notifyUiRefresh("spool-updated");
 }

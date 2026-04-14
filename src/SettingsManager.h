@@ -48,6 +48,33 @@ struct DeviceSettings {
   String authUser = "admin";
   String authPass = "espoolman";
 
+  // HX711 Scale
+  bool scaleEnabled = false;
+  int scaleDoutPin = DEFAULT_HX711_DOUT_PIN;
+  int scaleSckPin = DEFAULT_HX711_SCK_PIN;
+  float scaleCalibration = DEFAULT_HX711_CALIBRATION;
+  long scaleOffset = 0;
+
+  // SSD1306 OLED
+  bool oledEnabled = false;
+  int oledSdaPin = DEFAULT_OLED_SDA_PIN;
+  int oledSclPin = DEFAULT_OLED_SCL_PIN;
+
+  // Scale buttons
+  int btnTarePin = DEFAULT_BTN_TARE_PIN;
+  int btnEnterPin = DEFAULT_BTN_ENTER_PIN;
+
+  // Dashboard card order (comma-separated IDs)
+  String dashCardOrder;
+
+  // MQTT
+  bool mqttEnabled = false;
+  String mqttHost;
+  int mqttPort = DEFAULT_MQTT_PORT;
+  String mqttUser;
+  String mqttPass;
+  String mqttTopic = "espoolman";
+
   void setDefaults();
   void toJson(JsonDocument &doc) const;
   bool fromJson(const JsonDocument &doc);

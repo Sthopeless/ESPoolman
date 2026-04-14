@@ -28,18 +28,22 @@ class CircularLogger {
  public:
   static constexpr size_t Capacity = 4096;
   void append(const String &message) {
+    portENTER_CRITICAL(&mux);
     for (size_t i = 0; i < message.length(); ++i) {
       pushChar(message[i]);
     }
     pushChar('\n');
+    portEXIT_CRITICAL(&mux);
   }
 
-  String getContents() const {
+  String getContents() {
+    portENTER_CRITICAL(&mux);
     String output;
     output.reserve(length);
     for (size_t i = 0; i < length; ++i) {
       output += buffer[(head + i) % Capacity];
     }
+    portEXIT_CRITICAL(&mux);
     return output;
   }
 
@@ -57,6 +61,7 @@ class CircularLogger {
   char buffer[Capacity] = {};
   size_t head = 0;
   size_t length = 0;
+  portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 };
 
 extern CircularLogger logger;

@@ -432,6 +432,52 @@ const char *getIndexHtml() {
       width: 100%;
     }
 
+    .spool-ring {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+
+    .spool-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .spool-ring .ring-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.15);
+      stroke-width: 5;
+    }
+
+    .spool-ring .ring-fill {
+      fill: none;
+      stroke-width: 5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+
+    .spool-ring .ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .spool-ring .ring-pct {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .spool-ring .ring-sub {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
     .spool-stats {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -561,7 +607,10 @@ const char *getIndexHtml() {
       box-sizing: border-box;
       outline: none;
     }
+    .dash-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
     @media (max-width: 860px) {
+      .dash-row { grid-template-columns: 1fr; }
       .metric { grid-template-columns: 1fr; }
       .status-row { grid-template-columns: 1fr 1fr; }
       .spool-meta { grid-template-columns: 1fr 1fr; }
@@ -576,100 +625,7 @@ const char *getIndexHtml() {
 <body>
   <div class="toast-container" id="toastContainer"></div>
   <div class="page">
-    <div class="grid" id="dashboardSection">
-      <section class="card">
-        <header>
-          <div>
-            <h2><span id="statusLight" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);margin-right:9px;vertical-align:middle;flex-shrink:0"></span>Connectivity</h2>
-            <small>WiFi and server health</small>
-          </div>
-          <button class="button secondary" style="padding:8px 14px;font-size:13px" onclick="checkStatus()">↻ Refresh</button>
-        </header>
-        <div class="status-row">
-          <div class="status-block"><strong>Status</strong><span id="connectionLabel" style="font-size:16px">Offline</span></div>
-          <div class="status-block"><strong>WiFi</strong><span id="wifiStatus">-</span></div>
-          <div class="status-block"><strong>IP</strong><span id="wifiIp" style="font-size:14px;word-break:break-all">-</span></div>
-          <div class="status-block"><strong>Spoolman</strong><span id="spoolmanStatus">-</span></div>
-          <div class="status-block"><strong>Moonraker</strong><span id="moonrakerStatus">-</span></div>
-          <div class="status-block"><strong>RFID</strong><span id="rfidStatus">-</span></div>
-        </div>
-      </section>
-
-      <section class="card" id="currentSpoolCard">
-        <header>
-          <div>
-            <h2>Active Spool</h2>
-            <small>Current spool installed in Moonraker</small>
-          </div>
-          <div class="color-swatch">
-            <div id="currentSpoolColor" class="color-swatch-block" style="background:#FFFFFF"></div>
-            <small id="currentSpoolHex">#FFFFFF</small>
-          </div>
-        </header>
-        <div class="metric">
-          <div class="metric-card"><strong>Spool ID</strong><p id="currentId">-</p></div>
-          <div class="metric-card"><strong>Name</strong><p id="currentName">-</p></div>
-          <div class="metric-card"><strong>Remaining</strong><p id="currentRemaining">-</p></div>
-        </div>
-        <div class="gauge" style="margin-top:14px"><span id="currentGauge" class="gauge-fill" style="width:0%"></span></div>
-      </section>
-
-      <section class="card" id="nfcStatusCard">
-        <header>
-          <div>
-            <h2><span id="nfcHealthDot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:9px;vertical-align:middle;flex-shrink:0"></span>NFC Reader</h2>
-            <small>Latest tag and write queue status</small>
-          </div>
-        </header>
-        <div class="status-row">
-          <div class="status-block"><strong>Status</strong><span id="nfcHealth" style="font-size:16px">-</span></div>
-          <div class="status-block"><strong>Tag Type</strong><span id="nfcTagType">-</span></div>
-          <div class="status-block"><strong>Spool ID</strong><span id="nfcId">-</span></div>
-          <div class="status-block"><strong>Write Queue</strong><span id="pendingWriteStatus">Idle</span></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <header>
-          <div>
-            <h2>Last Scanned Tag</h2>
-            <small id="nfcSummaryText">Scan a tag to see the filament profile.</small>
-          </div>
-          <div class="color-swatch">
-            <div id="nfcColorChip" class="color-swatch-block" style="background:#FFFFFF"></div>
-            <small id="nfcColorDisplay">#FFFFFF</small>
-          </div>
-        </header>
-        <div class="status-row">
-          <div class="status-block"><strong>Name</strong><span id="nfcName">-</span></div>
-          <div class="status-block"><strong>Material</strong><span id="nfcMaterial">-</span></div>
-          <div class="status-block"><strong>Brand</strong><span id="nfcBrand">-</span></div>
-          <div class="status-block"><strong>Ext Temp</strong><span id="nfcExtTemp">-</span></div>
-          <div class="status-block"><strong>Bed Temp</strong><span id="nfcBedTemp">-</span></div>
-        </div>
-        <div class="status-row" style="margin-top:10px">
-          <div class="status-block"><strong>Remaining</strong><span id="nfcRemaining">-</span></div>
-          <div class="status-block"><strong>Total Weight</strong><span id="nfcWeight">-</span></div>
-          <div class="status-block"><strong>Diameter</strong><span id="nfcDiameter">-</span></div>
-          <div class="status-block"><strong>Location</strong><span id="nfcLocation">-</span></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <header>
-          <div>
-            <h2>Device Console</h2>
-            <small>Live log output from the device</small>
-          </div>
-          <div style="display:flex;gap:8px">
-            <small id="logLineCount" style="align-self:center;color:var(--muted)">0 lines</small>
-            <button class="button secondary" style="padding:8px 12px;font-size:13px" onclick="clearConsole()">Clear</button>
-            <button class="button secondary" style="padding:8px 12px;font-size:13px" onclick="copyConsole()">Copy</button>
-          </div>
-        </header>
-        <div id="console" class="console"></div>
-      </section>
-    </div>
+    <div class="grid" id="dashboardSection"></div>
 
     <section id="writeSection" class="card hidden">
       <header style="flex-wrap:wrap;gap:12px">
@@ -750,12 +706,143 @@ const char *getIndexHtml() {
       <section class="card">
         <header>
           <div>
+            <h2>Scale (HX711)</h2>
+            <small>Load cell weight sensor and OLED display</small>
+          </div>
+        </header>
+        <div class="field">
+          <label class="checkbox-toggle" style="width:fit-content">
+            <input type="checkbox" id="scaleEnabled" onchange="updateScaleVisibility()">
+            Enable HX711 scale
+          </label>
+        </div>
+        <div id="scaleFields" class="hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field">
+              <label for="scaleDoutPin">DOUT Pin</label>
+              <input id="scaleDoutPin" class="input" type="number" min="0" max="23" oninput="markDirty('scaleDoutPin')">
+            </div>
+            <div class="field">
+              <label for="scaleSckPin">SCK Pin</label>
+              <input id="scaleSckPin" class="input" type="number" min="0" max="23" oninput="markDirty('scaleSckPin')">
+            </div>
+          </div>
+          <div class="field">
+            <label for="scaleCalibration">Calibration Factor</label>
+            <input id="scaleCalibration" class="input" type="number" step="0.01" oninput="markDirty('scaleCalibration')">
+          </div>
+          <hr class="settings-divider">
+          <div class="field">
+            <label class="checkbox-toggle" style="width:fit-content">
+              <input type="checkbox" id="oledEnabled">
+              Enable SSD1306 OLED display
+            </label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field">
+              <label for="oledSdaPin">SDA Pin</label>
+              <input id="oledSdaPin" class="input" type="number" min="0" max="23" oninput="markDirty('oledSdaPin')">
+            </div>
+            <div class="field">
+              <label for="oledSclPin">SCL Pin</label>
+              <input id="oledSclPin" class="input" type="number" min="0" max="23" oninput="markDirty('oledSclPin')">
+            </div>
+          </div>
+          <hr class="settings-divider">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field">
+              <label for="btnTarePin">Tare Button Pin</label>
+              <input id="btnTarePin" class="input" type="number" min="0" max="23" oninput="markDirty('btnTarePin')">
+            </div>
+            <div class="field">
+              <label for="btnEnterPin">Enter Button Pin</label>
+              <input id="btnEnterPin" class="input" type="number" min="0" max="23" oninput="markDirty('btnEnterPin')">
+            </div>
+          </div>
+          <hr class="settings-divider">
+          <div id="scaleStatus" style="margin-bottom:14px">
+            <strong style="font-size:14px">Live Weight</strong>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:12px">
+              <span id="scaleWeightDisplay" style="font-size:24px;font-weight:700">-- g</span>
+              <span id="scaleConnectionDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="button secondary" onclick="scaleTare()">Tare (Zero)</button>
+            <button class="button" onclick="scaleMeasure()">Send Weight to Spoolman</button>
+          </div>
+        </div>
+        <button class="button" style="margin-top:14px" onclick="saveConfig()">Save Scale Settings</button>
+      </section>
+
+      <section class="card">
+        <header>
+          <div>
+            <h2>MQTT</h2>
+            <small>Publish data to Home Assistant or other MQTT brokers</small>
+          </div>
+        </header>
+        <div class="field">
+          <label class="checkbox-toggle" style="width:fit-content">
+            <input type="checkbox" id="mqttEnabled" onchange="updateMqttVisibility()">
+            Enable MQTT
+          </label>
+        </div>
+        <div id="mqttFields" class="hidden">
+          <div class="field">
+            <label for="mqttHost">Broker Host</label>
+            <input id="mqttHost" class="input" type="text" placeholder="192.168.1.100" oninput="markDirty('mqttHost')">
+          </div>
+          <div class="field">
+            <label for="mqttPort">Broker Port</label>
+            <input id="mqttPort" class="input" type="number" min="1" max="65535" oninput="markDirty('mqttPort')">
+          </div>
+          <div class="field">
+            <label for="mqttUser">Username <small style="color:var(--muted)">(optional)</small></label>
+            <input id="mqttUser" class="input" type="text" autocomplete="off" placeholder="Leave blank if not required" oninput="markDirty('mqttUser')">
+          </div>
+          <div class="field">
+            <label for="mqttPass">Password <small style="color:var(--muted)">(optional)</small></label>
+            <input id="mqttPass" class="input" type="password" autocomplete="new-password" placeholder="Leave blank to keep existing" oninput="markDirty('mqttPass')">
+          </div>
+          <div class="field">
+            <label for="mqttTopic">Topic Prefix</label>
+            <input id="mqttTopic" class="input" type="text" placeholder="espoolman" oninput="markDirty('mqttTopic')">
+          </div>
+          <div style="margin-top:8px">
+            <small style="color:var(--muted)">Topics: <code>{prefix}/weight</code>, <code>{prefix}/spool</code>, <code>{prefix}/nfc</code>, <code>{prefix}/status</code></small>
+          </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
+            <span id="mqttConnectionDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></span>
+            <span id="mqttConnectionLabel" style="font-size:13px;color:var(--muted)">Disconnected</span>
+          </div>
+        </div>
+        <button class="button" style="margin-top:14px" onclick="saveConfig()">Save MQTT Settings</button>
+      </section>
+
+      <section class="card">
+        <header>
+          <div>
             <h2>Visibility</h2>
             <small>Configure which sections and fields are shown</small>
           </div>
         </header>
         <div id="visibilityCheckboxes"></div>
         <button class="button secondary" style="margin-top:18px" onclick="saveConfig()">Save Visibility</button>
+      </section>
+
+      <section class="card">
+        <header>
+          <div>
+            <h2>Device</h2>
+            <small>Firmware update and device management</small>
+          </div>
+        </header>
+        <div class="field">
+          <label>Firmware Update</label>
+          <small style="display:block;color:var(--muted);margin-bottom:8px">Upload a compiled .bin file to update the firmware over the air</small>
+          <a href="/update" class="button secondary" style="display:inline-flex;text-decoration:none;justify-content:center">Open Firmware Update</a>
+        </div>
       </section>
     </section>
 
@@ -776,6 +863,201 @@ const char *getIndexHtml() {
       viewMode: 'grid',
       settings: {}
     };
+
+    const dashboardCards = [
+      { id: 'connectivity', label: 'Connectivity', size: 'full', html: () => `
+        <header>
+          <div>
+            <h2><span id="statusLight" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);margin-right:9px;vertical-align:middle;flex-shrink:0"></span>Connectivity</h2>
+            <small>WiFi and server health</small>
+          </div>
+          <button class="button secondary" style="padding:8px 14px;font-size:13px" onclick="checkStatus()">↻ Refresh</button>
+        </header>
+        <div class="status-row">
+          <div class="status-block"><strong>Status</strong><span id="connectionLabel" style="font-size:16px">Offline</span></div>
+          <div class="status-block"><strong>WiFi</strong><span id="wifiStatus">-</span></div>
+          <div class="status-block"><strong>IP</strong><span id="wifiIp" style="font-size:14px;word-break:break-all">-</span></div>
+          <div class="status-block"><strong>Spoolman</strong><span id="spoolmanStatus">-</span></div>
+          <div class="status-block"><strong>Moonraker</strong><span id="moonrakerStatus">-</span></div>
+          <div class="status-block"><strong>RFID</strong><span id="rfidStatus">-</span></div>
+        </div>` },
+      { id: 'activeSpool', label: 'Active Spool', size: 'compact', html: () => `
+        <header>
+          <div>
+            <h2>Active Spool</h2>
+            <small>Current spool installed in Moonraker</small>
+          </div>
+          <div class="color-swatch">
+            <div id="currentSpoolColor" class="color-swatch-block" style="background:#FFFFFF"></div>
+            <small id="currentSpoolHex">#FFFFFF</small>
+          </div>
+        </header>
+        <div class="metric">
+          <div class="metric-card"><strong>Spool ID</strong><p id="currentId">-</p></div>
+          <div class="metric-card"><strong>Name</strong><p id="currentName">-</p></div>
+          <div class="metric-card"><strong>Remaining</strong><p id="currentRemaining">-</p></div>
+        </div>
+        <div class="gauge" style="margin-top:14px"><span id="currentGauge" class="gauge-fill" style="width:0%"></span></div>` },
+      { id: 'nfcReader', label: 'NFC Reader', size: 'compact', html: () => `
+        <header>
+          <div>
+            <h2><span id="nfcHealthDot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:9px;vertical-align:middle;flex-shrink:0"></span>NFC Reader</h2>
+            <small>Latest tag and write queue status</small>
+          </div>
+        </header>
+        <div class="status-row">
+          <div class="status-block"><strong>Status</strong><span id="nfcHealth" style="font-size:16px">-</span></div>
+          <div class="status-block"><strong>Tag Type</strong><span id="nfcTagType">-</span></div>
+          <div class="status-block"><strong>Spool ID</strong><span id="nfcId">-</span></div>
+          <div class="status-block"><strong>Write Queue</strong><span id="pendingWriteStatus">Idle</span></div>
+        </div>` },
+      { id: 'lastScanned', label: 'Last Scanned Tag', size: 'full', html: () => `
+        <header>
+          <div>
+            <h2>Last Scanned Tag</h2>
+            <small id="nfcSummaryText">Scan a tag to see the filament profile.</small>
+          </div>
+          <div class="color-swatch">
+            <div id="nfcColorChip" class="color-swatch-block" style="background:#FFFFFF"></div>
+            <small id="nfcColorDisplay">#FFFFFF</small>
+          </div>
+        </header>
+        <div class="status-row">
+          <div class="status-block"><strong>Name</strong><span id="nfcName">-</span></div>
+          <div class="status-block"><strong>Material</strong><span id="nfcMaterial">-</span></div>
+          <div class="status-block"><strong>Brand</strong><span id="nfcBrand">-</span></div>
+          <div class="status-block"><strong>Ext Temp</strong><span id="nfcExtTemp">-</span></div>
+          <div class="status-block"><strong>Bed Temp</strong><span id="nfcBedTemp">-</span></div>
+        </div>
+        <div class="status-row" style="margin-top:10px">
+          <div class="status-block"><strong>Remaining</strong><span id="nfcRemaining">-</span></div>
+          <div class="status-block"><strong>Total Weight</strong><span id="nfcWeight">-</span></div>
+          <div class="status-block"><strong>Diameter</strong><span id="nfcDiameter">-</span></div>
+          <div class="status-block"><strong>Location</strong><span id="nfcLocation">-</span></div>
+        </div>` },
+      { id: 'scale', label: 'Scale', size: 'compact', html: () => `
+        <header>
+          <div>
+            <h2>Scale</h2>
+            <small>Live weight from HX711 load cell</small>
+          </div>
+          <span id="dashScaleDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+        </header>
+        <div style="text-align:center;padding:12px 0">
+          <div id="dashScaleWeight" style="font-size:36px;font-weight:700;letter-spacing:-1px">-- g</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:8px">
+          <div class="field" style="flex:1;min-width:140px;margin:0">
+            <label for="dashScaleSpool" style="font-size:12px">Send weight to spool</label>
+            <select id="dashScaleSpool" class="input" style="padding:8px 10px"></select>
+          </div>
+          <button class="button" style="padding:10px 16px;white-space:nowrap" onclick="dashScaleMeasure()">Send Weight</button>
+          <button class="button secondary" style="padding:10px 14px" onclick="scaleTare()">Tare</button>
+        </div>` },
+      { id: 'console', label: 'Device Console', size: 'full', html: () => `
+        <header>
+          <div>
+            <h2>Device Console</h2>
+            <small>Live log output from the device</small>
+          </div>
+          <div style="display:flex;gap:8px">
+            <small id="logLineCount" style="align-self:center;color:var(--muted)">0 lines</small>
+            <button class="button secondary" style="padding:8px 12px;font-size:13px" onclick="clearConsole()">Clear</button>
+            <button class="button secondary" style="padding:8px 12px;font-size:13px" onclick="copyConsole()">Copy</button>
+          </div>
+        </header>
+        <div id="console" class="console"></div>` }
+    ];
+
+    // Fixed dashboard layout:
+    // [Connectivity]
+    // [Scale][Active Spool][NFC Reader]
+    // [Last Scanned Tag]
+    // [Device Console]
+    const dashboardLayout = [
+      { ids: ['connectivity'], row: false },
+      { ids: ['scale', 'activeSpool', 'nfcReader'], row: true },
+      { ids: ['lastScanned'], row: false },
+      { ids: ['console'], row: false }
+    ];
+
+    function renderDashboard() {
+      const container = document.getElementById('dashboardSection');
+      container.innerHTML = '';
+      const cardMap = {};
+      dashboardCards.forEach(c => { cardMap[c.id] = c; });
+
+      dashboardLayout.forEach(group => {
+        if (group.row) {
+          const row = document.createElement('div');
+          row.className = 'dash-row';
+          group.ids.forEach(id => {
+            const def = cardMap[id];
+            if (!def) return;
+            const section = document.createElement('section');
+            section.className = 'card dash-card';
+            section.dataset.cardId = def.id;
+            section.innerHTML = def.html();
+            row.appendChild(section);
+          });
+          container.appendChild(row);
+        } else {
+          group.ids.forEach(id => {
+            const def = cardMap[id];
+            if (!def) return;
+            const section = document.createElement('section');
+            section.className = 'card dash-card';
+            section.dataset.cardId = def.id;
+            section.innerHTML = def.html();
+            container.appendChild(section);
+          });
+        }
+      });
+    }
+
+    function updateDashboardVisibility(data) {
+      const visibility = {
+        connectivity: data.showWifi !== false,
+        activeSpool: data.showCurrentSpool !== false,
+        nfcReader: data.showNfcData !== false,
+        lastScanned: data.showNfcData !== false,
+        scale: data.scaleEnabled === true,
+        console: data.showLogger !== false
+      };
+      document.querySelectorAll('.dash-card').forEach(card => {
+        const id = card.dataset.cardId;
+        card.classList.toggle('hidden', visibility[id] === false);
+      });
+    }
+
+    function dashScaleMeasure() {
+      const sel = document.getElementById('dashScaleSpool');
+      const spoolId = sel ? sel.value : '';
+      if (!spoolId || spoolId === '0') {
+        showToast('Select a spool first', 'warning');
+        return;
+      }
+      fetch('/scale/measure-spool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spoolId: parseInt(spoolId) })
+      }).then(r => r.ok ? r.text().then(t => showToast(t, 'success')) : r.text().then(t => showToast(t, 'warning')))
+        .catch(() => showToast('Measure failed', 'error'));
+    }
+
+    function populateScaleSpoolDropdown() {
+      const sel = document.getElementById('dashScaleSpool');
+      if (!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="0">-- Select spool --</option>';
+      uiState.spoolData.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = '#' + s.id + ' ' + (s.name || 'Unnamed') + (s.material ? ' (' + s.material + ')' : '');
+        sel.appendChild(opt);
+      });
+      if (prev) sel.value = prev;
+    }
 
     const dirtyFields = new Set();
     function markDirty(id) { dirtyFields.add(id); }
@@ -836,25 +1118,51 @@ const char *getIndexHtml() {
       document.getElementById('authFields').classList.toggle('hidden', !enabled);
     }
 
+    function updateScaleVisibility() {
+      const enabled = document.getElementById('scaleEnabled').checked;
+      document.getElementById('scaleFields').classList.toggle('hidden', !enabled);
+    }
+
+    function updateMqttVisibility() {
+      const enabled = document.getElementById('mqttEnabled').checked;
+      document.getElementById('mqttFields').classList.toggle('hidden', !enabled);
+    }
+
+    function scaleTare() {
+      fetch('/scale/tare', { method: 'POST' })
+        .then(r => r.text()).then(t => showToast(t, 'success'))
+        .catch(() => showToast('Tare failed', 'error'));
+    }
+
+    function scaleMeasure() {
+      fetch('/scale/measure', { method: 'POST' })
+        .then(r => r.ok ? r.text().then(t => showToast(t, 'success')) : r.text().then(t => showToast(t, 'warning')))
+        .catch(() => showToast('Measure failed', 'error'));
+    }
+
     let consoleAutoScroll = true;
     function updateConsole(text) {
-      const el = document.getElementById('console');
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-      el.textContent = text || '';
+      const c = document.getElementById('console');
+      if (!c) return;
+      const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40;
+      c.textContent = text || '';
       const lines = (text || '').split('\n').filter(l => l.length).length;
-      document.getElementById('logLineCount').textContent = lines + ' lines';
+      const lc = document.getElementById('logLineCount');
+      if (lc) lc.textContent = lines + ' lines';
       if (atBottom || consoleAutoScroll) {
-        el.scrollTop = el.scrollHeight;
+        c.scrollTop = c.scrollHeight;
       }
     }
 
     function clearConsole() {
-      document.getElementById('console').textContent = '';
-      document.getElementById('logLineCount').textContent = '0 lines';
+      const c = document.getElementById('console');
+      if (c) c.textContent = '';
+      const lc = document.getElementById('logLineCount');
+      if (lc) lc.textContent = '0 lines';
     }
 
     function copyConsole() {
-      const text = document.getElementById('console').textContent;
+      const text = (document.getElementById('console') || {}).textContent;
       if (!text) { showToast('Nothing to copy', 'warning'); return; }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
@@ -882,9 +1190,10 @@ const char *getIndexHtml() {
     }
 
     function setServiceStatus(id, ok, okLabel, failLabel) {
-      const el = document.getElementById(id);
-      el.textContent = ok ? okLabel : failLabel;
-      el.style.color = ok ? 'var(--good)' : 'var(--bad)';
+      const e = document.getElementById(id);
+      if (!e) return;
+      e.textContent = ok ? okLabel : failLabel;
+      e.style.color = ok ? 'var(--good)' : 'var(--bad)';
     }
 
     function showToast(message, type = 'success') {
@@ -897,10 +1206,13 @@ const char *getIndexHtml() {
     }
 
     function setConnectionStatus(connected) {
-      document.getElementById('statusLight').style.background = connected ? 'var(--good)' : 'var(--bad)';
+      const light = document.getElementById('statusLight');
+      if (light) light.style.background = connected ? 'var(--good)' : 'var(--bad)';
       const lbl = document.getElementById('connectionLabel');
-      lbl.textContent = connected ? 'Online' : 'Offline';
-      lbl.style.color = connected ? 'var(--good)' : 'var(--bad)';
+      if (lbl) {
+        lbl.textContent = connected ? 'Online' : 'Offline';
+        lbl.style.color = connected ? 'var(--good)' : 'var(--bad)';
+      }
     }
 
     function buildVisibilityForm(settings) {
@@ -916,6 +1228,7 @@ const char *getIndexHtml() {
         .then(data => {
           uiState.spoolData = Array.isArray(data) ? data : [];
           renderSpools(uiState.spoolData);
+          populateScaleSpoolDropdown();
           return uiState.spoolData;
         })
         .catch(err => {
@@ -1013,24 +1326,21 @@ const char *getIndexHtml() {
         card.innerHTML = `
           <div class="spool-color-bar" style="background:#${color};opacity:${color === 'FFFFFF' ? 0.15 : 1}"></div>
           <div class="card-body" style="padding:16px">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px">
-              <div style="min-width:0">
-                <h3 style="font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                  <span class="color-chip" style="background:#${color};width:12px;height:12px;flex-shrink:0"></span>
-                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${spool.name || 'Unnamed'}</span>
-                </h3>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+              ${snf.snfRemaining !== false ? spoolRing(percent, '#' + color, remaining.toFixed(0) + 'g') : ''}
+              <div style="min-width:0;flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                  <h3 style="font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                    <!-- <span class="color-chip" style="background:#${color};width:12px;height:12px;flex-shrink:0"></span> -->
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${spool.name || 'Unnamed'}</span>
+                  </h3>
+                  <span class="spool-badge" style="padding:4px 8px;font-size:11px;flex-shrink:0">#${spool.id}</span>
+                </div>
                 <small style="color:var(--muted)">${[spool.material, spool.brand].filter(Boolean).join(' · ') || '-'}</small>
+                ${snf.snfLocation !== false && spool.location ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">📍 ${spool.location}</div>` : ''}
               </div>
-              <span class="spool-badge" style="padding:5px 10px;font-size:12px;flex-shrink:0">#${spool.id}</span>
             </div>
-            ${snf.snfRemaining !== false ? `
-            <div class="gauge" style="margin-bottom:6px"><span class="gauge-fill" style="width:${percent}%;background:${gaugeColor(color)}"></span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <span style="font-size:13px;color:var(--muted)">${remaining.toFixed(0)} g remaining</span>
-              <span style="font-size:13px;font-weight:700;color:var(--text)">${percent}% left</span>
-            </div>` : ''}
             ${statsHtml}
-            ${snf.snfLocation !== false && spool.location ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">📍 ${spool.location}</div>` : ''}
             <button class="${isArmed ? 'button' : 'button secondary'}" style="width:100%;justify-content:center"
               onclick="writeSpoolDirect(${spool.id},${spool.filamentId||0},'${safeName}')">
               ${isArmed ? '⚡ Armed — tap a tag' : '✎ Write to Tag'}
@@ -1038,6 +1348,22 @@ const char *getIndexHtml() {
           </div>`;
         container.appendChild(card);
       });
+    }
+
+    function spoolRing(percent, color, label) {
+      const r = 35, cx = 40, cy = 40, circ = 2 * Math.PI * r;
+      const offset = circ * (1 - percent / 100);
+      return `<div class="spool-ring">
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle class="ring-track" cx="${cx}" cy="${cy}" r="${r}"/>
+          <circle class="ring-fill" cx="${cx}" cy="${cy}" r="${r}"
+            stroke="${color}" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-pct">${percent}%</span>
+          <span class="ring-sub">${label}</span>
+        </div>
+      </div>`;
     }
 
     function normalizeHex(value) {
@@ -1151,7 +1477,22 @@ const char *getIndexHtml() {
         showFieldWifiSsid: document.getElementById('showFieldWifiSsid').checked,
         showFieldWifiPass: document.getElementById('showFieldWifiPass').checked,
         showFieldSpoolman: document.getElementById('showFieldSpoolman').checked,
-        showFieldMoonraker: document.getElementById('showFieldMoonraker').checked
+        showFieldMoonraker: document.getElementById('showFieldMoonraker').checked,
+        scaleEnabled: document.getElementById('scaleEnabled').checked,
+        scaleDoutPin: parseInt(document.getElementById('scaleDoutPin').value) || 3,
+        scaleSckPin: parseInt(document.getElementById('scaleSckPin').value) || 10,
+        scaleCalibration: parseFloat(document.getElementById('scaleCalibration').value) || 420,
+        oledEnabled: document.getElementById('oledEnabled').checked,
+        oledSdaPin: parseInt(document.getElementById('oledSdaPin').value) || 18,
+        oledSclPin: parseInt(document.getElementById('oledSclPin').value) || 19,
+        btnTarePin: parseInt(document.getElementById('btnTarePin').value) || 0,
+        btnEnterPin: parseInt(document.getElementById('btnEnterPin').value) || 1,
+        mqttEnabled: document.getElementById('mqttEnabled').checked,
+        mqttHost: document.getElementById('mqttHost').value,
+        mqttPort: parseInt(document.getElementById('mqttPort').value) || 1883,
+        mqttUser: document.getElementById('mqttUser').value,
+        mqttPass: document.getElementById('mqttPass').value,
+        mqttTopic: document.getElementById('mqttTopic').value || 'espoolman'
       };
 
       fetch('/save-config', {
@@ -1184,12 +1525,22 @@ const char *getIndexHtml() {
 
     function updateData() {
       fetch('/data').then(response => response.json()).then(data => {
+        updateDashboardVisibility(data);
         setConnectionStatus(data.wifiConnected);
-        document.getElementById('wifiStatus').textContent = data.wifiStatus || '-';
-        document.getElementById('wifiIp').textContent = data.ipAddress || '-';
-        setServiceStatus('spoolmanStatus', data.spoolman, 'Connected', 'Offline');
-        setServiceStatus('moonrakerStatus', data.moonraker, 'Connected', 'Offline');
-        setServiceStatus('rfidStatus', data.nfc, 'OK', 'Error');
+        const el = (id) => document.getElementById(id);
+        if (el('wifiStatus')) el('wifiStatus').textContent = data.wifiStatus || '-';
+        if (el('wifiIp')) el('wifiIp').textContent = data.ipAddress || '-';
+        if (el('spoolmanStatus')) setServiceStatus('spoolmanStatus', data.spoolman, 'Connected', 'Offline');
+        if (el('moonrakerStatus')) setServiceStatus('moonrakerStatus', data.moonraker, 'Connected', 'Offline');
+        if (el('rfidStatus')) setServiceStatus('rfidStatus', data.nfc, 'OK', 'Error');
+
+        // Dashboard scale widget
+        if (data.scaleEnabled) {
+          const wt = el('dashScaleWeight');
+          const dot = el('dashScaleDot');
+          if (wt) wt.textContent = data.scaleConnected ? parseFloat(data.scaleWeight).toFixed(1) + ' g' : '-- g';
+          if (dot) dot.style.background = data.scaleConnected ? 'var(--good)' : 'var(--bad)';
+        }
 
         // Active spool — look up full data from spoolData cache for remaining/color/gauge
         const cSpool = uiState.spoolData.find(s => Number(s.id) === Number(data.currentId));
@@ -1197,37 +1548,36 @@ const char *getIndexHtml() {
         const cRem = cSpool ? parseFloat(cSpool.remaining) || 0 : 0;
         const cTotal = cSpool ? parseFloat(cSpool.totalWeight) || 0 : 0;
         const cPct = cTotal ? Math.max(0, Math.min(100, Math.round((cRem / cTotal) * 100))) : 0;
-        document.getElementById('currentId').textContent = data.currentId || '-';
-        document.getElementById('currentName').textContent = data.currentName || '-';
-        document.getElementById('currentRemaining').textContent = cSpool ? cRem.toFixed(0) + ' g (' + cPct + '%)' : '-';
-        document.getElementById('currentSpoolColor').style.background = '#' + cColor;
-        document.getElementById('currentSpoolHex').textContent = '#' + cColor;
-        document.getElementById('currentGauge').style.width = cPct + '%';
-        document.getElementById('currentGauge').style.background = '#' + cColor;
+        if (el('currentId')) el('currentId').textContent = data.currentId || '-';
+        if (el('currentName')) el('currentName').textContent = data.currentName || '-';
+        if (el('currentRemaining')) el('currentRemaining').textContent = cSpool ? cRem.toFixed(0) + ' g (' + cPct + '%)' : '-';
+        if (el('currentSpoolColor')) el('currentSpoolColor').style.background = '#' + cColor;
+        if (el('currentSpoolHex')) el('currentSpoolHex').textContent = '#' + cColor;
+        if (el('currentGauge')) { el('currentGauge').style.width = cPct + '%'; el('currentGauge').style.background = '#' + cColor; }
 
         // NFC reader card
-        document.getElementById('nfcHealthDot').style.background = data.nfc ? 'var(--good)' : 'var(--muted)';
-        document.getElementById('nfcHealth').textContent = data.nfc ? 'Active' : 'Idle';
-        document.getElementById('nfcHealth').style.color = data.nfc ? 'var(--good)' : 'var(--muted)';
-        document.getElementById('nfcTagType').textContent = data.nfcTagType || '-';
-        document.getElementById('nfcId').textContent = data.nfcId || '-';
-        document.getElementById('pendingWriteStatus').textContent = data.pendingWriteStatus || 'Idle';
-        document.getElementById('nfcStatusCard').classList.toggle('pulse', !!data.pendingWrite);
+        if (el('nfcHealthDot')) el('nfcHealthDot').style.background = data.nfc ? 'var(--good)' : 'var(--muted)';
+        if (el('nfcHealth')) { el('nfcHealth').textContent = data.nfc ? 'Active' : 'Idle'; el('nfcHealth').style.color = data.nfc ? 'var(--good)' : 'var(--muted)'; }
+        if (el('nfcTagType')) el('nfcTagType').textContent = data.nfcTagType || '-';
+        if (el('nfcId')) el('nfcId').textContent = data.nfcId || '-';
+        if (el('pendingWriteStatus')) el('pendingWriteStatus').textContent = data.pendingWriteStatus || 'Idle';
+        const nfcCard = document.querySelector('[data-card-id="nfcReader"]');
+        if (nfcCard) nfcCard.classList.toggle('pulse', !!data.pendingWrite);
 
         // Last scanned tag
         const nfcColor = normalizeHex(data.nfcColor || 'FFFFFF');
-        document.getElementById('nfcName').textContent = data.nfcName || '-';
-        document.getElementById('nfcMaterial').textContent = data.nfcMaterial || '-';
-        document.getElementById('nfcBrand').textContent = data.nfcBrand || '-';
-        document.getElementById('nfcColorChip').style.background = '#' + nfcColor;
-        document.getElementById('nfcColorDisplay').textContent = '#' + nfcColor;
-        document.getElementById('nfcExtTemp').textContent = data.nfcExtTemp && data.nfcExtTemp !== '0' ? data.nfcExtTemp + ' °C' : '-';
-        document.getElementById('nfcBedTemp').textContent = data.nfcBedTemp && data.nfcBedTemp !== '0' ? data.nfcBedTemp + ' °C' : '-';
-        document.getElementById('nfcRemaining').textContent = data.nfcRemaining ? data.nfcRemaining + ' g' : '-';
-        document.getElementById('nfcWeight').textContent = data.nfcWeight ? data.nfcWeight + ' g' : '-';
-        document.getElementById('nfcDiameter').textContent = data.nfcDiameter ? data.nfcDiameter + ' mm' : '-';
-        document.getElementById('nfcLocation').textContent = data.nfcLocation || '-';
-        if (data.nfcName) document.getElementById('nfcSummaryText').textContent = 'Last scan: ' + data.nfcName;
+        if (el('nfcName')) el('nfcName').textContent = data.nfcName || '-';
+        if (el('nfcMaterial')) el('nfcMaterial').textContent = data.nfcMaterial || '-';
+        if (el('nfcBrand')) el('nfcBrand').textContent = data.nfcBrand || '-';
+        if (el('nfcColorChip')) el('nfcColorChip').style.background = '#' + nfcColor;
+        if (el('nfcColorDisplay')) el('nfcColorDisplay').textContent = '#' + nfcColor;
+        if (el('nfcExtTemp')) el('nfcExtTemp').textContent = data.nfcExtTemp && data.nfcExtTemp !== '0' ? data.nfcExtTemp + ' °C' : '-';
+        if (el('nfcBedTemp')) el('nfcBedTemp').textContent = data.nfcBedTemp && data.nfcBedTemp !== '0' ? data.nfcBedTemp + ' °C' : '-';
+        if (el('nfcRemaining')) el('nfcRemaining').textContent = data.nfcRemaining ? data.nfcRemaining + ' g' : '-';
+        if (el('nfcWeight')) el('nfcWeight').textContent = data.nfcWeight ? data.nfcWeight + ' g' : '-';
+        if (el('nfcDiameter')) el('nfcDiameter').textContent = data.nfcDiameter ? data.nfcDiameter + ' mm' : '-';
+        if (el('nfcLocation')) el('nfcLocation').textContent = data.nfcLocation || '-';
+        if (data.nfcName && el('nfcSummaryText')) el('nfcSummaryText').textContent = 'Last scan: ' + data.nfcName;
 
         // Write tab armed banner sync
         if (data.pendingWrite && data.newNfcId && data.newNfcId !== '0') {
@@ -1262,6 +1612,48 @@ const char *getIndexHtml() {
         }
         setField('authUser', data.authUser);
         // authPass is never prefilled
+
+        // Scale settings
+        const scaleEnabledEl = document.getElementById('scaleEnabled');
+        if (document.activeElement !== scaleEnabledEl) {
+          scaleEnabledEl.checked = data.scaleEnabled === true;
+          document.getElementById('scaleFields').classList.toggle('hidden', !data.scaleEnabled);
+        }
+        setField('scaleDoutPin', data.scaleDoutPin);
+        setField('scaleSckPin', data.scaleSckPin);
+        setField('scaleCalibration', data.scaleCalibration);
+        const oledEl = document.getElementById('oledEnabled');
+        if (document.activeElement !== oledEl) oledEl.checked = data.oledEnabled === true;
+        setField('oledSdaPin', data.oledSdaPin);
+        setField('oledSclPin', data.oledSclPin);
+        setField('btnTarePin', data.btnTarePin);
+        setField('btnEnterPin', data.btnEnterPin);
+
+        // Scale live weight
+        if (data.scaleEnabled && data.scaleConnected) {
+          document.getElementById('scaleWeightDisplay').textContent = parseFloat(data.scaleWeight).toFixed(1) + ' g';
+          document.getElementById('scaleConnectionDot').style.background = 'var(--good)';
+        } else if (data.scaleEnabled) {
+          document.getElementById('scaleWeightDisplay').textContent = '-- g';
+          document.getElementById('scaleConnectionDot').style.background = 'var(--bad)';
+        }
+
+        // MQTT settings
+        const mqttEnabledEl = document.getElementById('mqttEnabled');
+        if (document.activeElement !== mqttEnabledEl) {
+          mqttEnabledEl.checked = data.mqttEnabled === true;
+          document.getElementById('mqttFields').classList.toggle('hidden', !data.mqttEnabled);
+        }
+        setField('mqttHost', data.mqttHost);
+        setField('mqttPort', data.mqttPort);
+        setField('mqttUser', data.mqttUser);
+        // mqttPass is never prefilled
+        setField('mqttTopic', data.mqttTopic);
+        if (data.mqttEnabled) {
+          document.getElementById('mqttConnectionDot').style.background = data.mqttConnected ? 'var(--good)' : 'var(--bad)';
+          document.getElementById('mqttConnectionLabel').textContent = data.mqttConnected ? 'Connected' : 'Disconnected';
+          document.getElementById('mqttConnectionLabel').style.color = data.mqttConnected ? 'var(--good)' : 'var(--muted)';
+        }
 
         visibilityConfig.forEach(item => {
           const checkbox = document.getElementById(item.key);
@@ -1362,9 +1754,10 @@ const char *getIndexHtml() {
         showFieldMoonraker: true
       };
       renderVisibilityOptions(settings);
+      renderDashboard();
       showPanel('dashboard');
       updateData();
-      loadSpools();
+      loadSpools().then(() => populateScaleSpoolDropdown());
       setInterval(updateData, 5000);
 
       const eventSource = new EventSource('/events');
@@ -1384,7 +1777,7 @@ const char *getIndexHtml() {
       eventSource.onerror = () => { setConnectionStatus(false); };
     }
 
-    init();
+    try { init(); } catch(e) { document.body.innerHTML = '<pre style="color:red;padding:20px">Init error: ' + e.message + '\n' + e.stack + '</pre>'; }
   </script>
 </body>
 </html>

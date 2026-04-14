@@ -47,6 +47,23 @@ void DeviceSettings::setDefaults() {
   authEnabled = false;
   authUser = "espoolman";
   authPass = "espoolman";
+  scaleEnabled = false;
+  scaleDoutPin = DEFAULT_HX711_DOUT_PIN;
+  scaleSckPin = DEFAULT_HX711_SCK_PIN;
+  scaleCalibration = DEFAULT_HX711_CALIBRATION;
+  scaleOffset = 0;
+  oledEnabled = false;
+  oledSdaPin = DEFAULT_OLED_SDA_PIN;
+  oledSclPin = DEFAULT_OLED_SCL_PIN;
+  btnTarePin = DEFAULT_BTN_TARE_PIN;
+  btnEnterPin = DEFAULT_BTN_ENTER_PIN;
+  dashCardOrder = "";
+  mqttEnabled = false;
+  mqttHost = "";
+  mqttPort = DEFAULT_MQTT_PORT;
+  mqttUser = "";
+  mqttPass = "";
+  mqttTopic = "espoolman";
 }
 
 void DeviceSettings::toJson(JsonDocument &doc) const {
@@ -92,6 +109,23 @@ void DeviceSettings::toJson(JsonDocument &doc) const {
   doc["authEnabled"] = authEnabled;
   doc["authUser"] = authUser;
   doc["authPass"] = authPass;
+  doc["scaleEnabled"] = scaleEnabled;
+  doc["scaleDoutPin"] = scaleDoutPin;
+  doc["scaleSckPin"] = scaleSckPin;
+  doc["scaleCalibration"] = scaleCalibration;
+  doc["scaleOffset"] = scaleOffset;
+  doc["oledEnabled"] = oledEnabled;
+  doc["oledSdaPin"] = oledSdaPin;
+  doc["oledSclPin"] = oledSclPin;
+  doc["btnTarePin"] = btnTarePin;
+  doc["btnEnterPin"] = btnEnterPin;
+  doc["dashCardOrder"] = dashCardOrder;
+  doc["mqttEnabled"] = mqttEnabled;
+  doc["mqttHost"] = mqttHost;
+  doc["mqttPort"] = mqttPort;
+  doc["mqttUser"] = mqttUser;
+  doc["mqttPass"] = mqttPass;
+  doc["mqttTopic"] = mqttTopic;
 }
 
 bool DeviceSettings::fromJson(const JsonDocument &doc) {
@@ -138,6 +172,23 @@ bool DeviceSettings::fromJson(const JsonDocument &doc) {
   authEnabled = doc["authEnabled"] | authEnabled;
   authUser = String(doc["authUser"] | authUser.c_str());
   authPass = String(doc["authPass"] | authPass.c_str());
+  scaleEnabled = doc["scaleEnabled"] | scaleEnabled;
+  scaleDoutPin = doc["scaleDoutPin"] | scaleDoutPin;
+  scaleSckPin = doc["scaleSckPin"] | scaleSckPin;
+  scaleCalibration = doc["scaleCalibration"] | scaleCalibration;
+  scaleOffset = doc["scaleOffset"] | scaleOffset;
+  oledEnabled = doc["oledEnabled"] | oledEnabled;
+  oledSdaPin = doc["oledSdaPin"] | oledSdaPin;
+  oledSclPin = doc["oledSclPin"] | oledSclPin;
+  btnTarePin = doc["btnTarePin"] | btnTarePin;
+  btnEnterPin = doc["btnEnterPin"] | btnEnterPin;
+  dashCardOrder = String(doc["dashCardOrder"] | dashCardOrder.c_str());
+  mqttEnabled = doc["mqttEnabled"] | mqttEnabled;
+  mqttHost = String(doc["mqttHost"] | mqttHost.c_str());
+  mqttPort = doc["mqttPort"] | mqttPort;
+  mqttUser = String(doc["mqttUser"] | mqttUser.c_str());
+  mqttPass = String(doc["mqttPass"] | mqttPass.c_str());
+  mqttTopic = String(doc["mqttTopic"] | mqttTopic.c_str());
   return true;
 }
 
